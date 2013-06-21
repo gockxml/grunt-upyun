@@ -1,6 +1,6 @@
 /*
  * grunt-upyun
- * https://github.com/gock/grunt-upyun
+ * https://github.com/gockxml/grunt-upyun
  *
  * Copyright (c) 2013 gock
  * Licensed under the MIT license.
@@ -17,7 +17,6 @@ module.exports = function(grunt) {
 	upyun: {
 
 		options: {
-			//endpoint: 'http://v3.api.upyun.com',
 			username : 'admin',
 			password : '123456',
 			bucket: 'test'
