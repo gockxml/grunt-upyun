@@ -37,7 +37,7 @@ module.exports = function(grunt) {
 	async.forEach(all, function(file, cb) {
 
 		var dest = file[0], filepath = file[1];
-		client.uploadFile(dest, grunt.file.read(filepath), function(err, status, data){
+		client.uploadFile(dest, grunt.file.read(filepath, , { encoding : null }), function(err, status, data){
 			grunt.log.writeln(dest, status, data);
 			cb();	
 		})
