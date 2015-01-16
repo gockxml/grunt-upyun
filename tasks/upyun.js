@@ -8,42 +8,52 @@
 
 'use strict';
 
+var mime = require('mime');
+var upyun = require("upyun");
+var path = require('path');
+
 module.exports = function(grunt) {
 
   grunt.registerMultiTask('upyun', 'Your task description goes here.', function() {
 
-	var done = this.async();
-	var async = grunt.util.async;
+    var done = this.async();
+    var async = grunt.util.async;
     var options = this.options();
-	var upyun = require("upyun"), client = upyun(options["bucket"], options["username"], options["password"]);	
-	var path = require('path');
-	var all = []
+    var all = [];
+
+    var client = new upyun(options["bucket"], options["username"], options["password"], options['endpoint'], options['apiVersion'] || 'legacy');
 
     // Iterate over all specified file groups.
-	this.files.forEach(function(f) {
-		var paths = f.src.filter(function(filepath) {
-			// Warn on and remove invalid source files (if nonull was set).
-			if (!grunt.file.exists(filepath)) {
-				grunt.log.warn('Source file "' + filepath + '" not found.');
-				return false;
-			} else {
-				return true;
-			}
-		}).map(function(filepath) {
-			all.push([f.orig.expand ? f.dest : path.join(f.dest, filepath), filepath]);
-		})
-	});
+    this.files.forEach(function(f) {
+      var paths = f.src.filter(function(filepath) {
+        // Warn on and remove invalid source files (if nonull was set).
+        if (grunt.file.isDir(filepath)) return false;
+        if (!grunt.file.exists(filepath)) {
+          grunt.log.warn('Source file "' + filepath + '" not found.');
+          return false;
+        } else {
+          return true;
+        }
+      }).map(function(filepath) {
+        all.push([f.orig.expand ? f.dest : path.join(f.dest, filepath), filepath]);
+      })
+    });
 
-	async.forEach(all, function(file, cb) {
+    async.forEach(all, function(file, cb) {
 
-		var dest = file[0], filepath = file[1];
-		client.uploadFile(dest, grunt.file.read(filepath, , { encoding : null }), function(err, status, data){
-			grunt.log.writeln(dest, status, data);
-			cb();	
-		})
-	}, function(error){
-		done(!error)
-	})
+      var dest = file[0],
+        filepath = file[1];
+      client.uploadFile(dest, filepath, mime.lookup(dest), true, function(err, data) {
+        if (err || (data && data.statusCode != 200)) {
+          grunt.fail.fatal(err || JSON.stringify(data));
+        } else {
+          grunt.log.ok(dest, data.statusCode)
+          cb();
+        }
+      })
+    }, function(error) {
+      done(!error)
+    })
 
   });
 
